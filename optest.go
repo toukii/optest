@@ -65,48 +65,58 @@ func min(i, j int) int {
 	return j
 }
 
-func Search(a *A) ([]string, []int64, int) {
+func Search(act *A, acts []*A) ([]string, []int64, int) {
 	length++
 	if length > 100 {
 		panic(length)
 	}
-	if a.VUsed {
+	if act.VUsed {
 		return nil, nil, 0
 	}
-	leftfee := a.LeftFee()
+	leftfee := act.LeftFee()
 	if leftfee <= 0 {
 		return nil, nil, 0
 	}
-	if len(a.Vs) <= 0 {
+	if len(act.Vs) <= 0 {
 		return nil, nil, 0
 	}
+
+	act.VUsed = true
+
+	leftActs := make([]*A, 0, len(acts)+1)
+	for _, _a := range acts {
+		if _a.VUsed {
+			continue
+		}
+		leftActs = append(leftActs, _a)
+	}
 	// len 可以斟酌
-	roads := make([]*Road, 0, len(a.Vs))
-	for _, v := range a.Vs {
+	roads := make([]*Road, 0, len(act.Vs))
+	for _, v := range act.Vs {
 		if v.UsedBy != "" {
 			continue
 		}
 		realReduce := min(leftfee, v.Reduce)
 		// 使用voucher
-		v.UsedBy = a.Id
-		a.VUsed = true
+		v.UsedBy = act.Id
 
 		road := &Road{
-			AIds:   []string{a.Id},
+			AIds:   []string{act.Id},
 			VIds:   []int64{v.Id},
 			Reduce: realReduce,
 		}
 		roads = append(roads, road)
-		for _, _a := range As {
-			aids, vids, reduce := Search(_a)
-			road.AIds = append(road.AIds, aids...)
-			road.VIds = append(road.VIds, vids...)
-			road.Reduce += reduce
+		if len(acts) > 1 {
+			for _, _a := range leftActs {
+				aids, vids, reduce := Search(_a, leftActs)
+				road.AIds = append(road.AIds, aids...)
+				road.VIds = append(road.VIds, vids...)
+				road.Reduce += reduce
+			}
 		}
 
 		// 清空使用voucher
 		v.UsedBy = ""
-		a.VUsed = false
 	}
 	sort.Slice(roads, func(i, j int) bool {
 		if roads[i] == nil {
@@ -118,16 +128,14 @@ func Search(a *A) ([]string, []int64, int) {
 		return roads[i].Reduce > roads[j].Reduce
 	})
 	if roads[0] == nil {
+		act.VUsed = false
 		return nil, nil, 0
 	}
-	for _, a := range As {
-		if a.Id == roads[0].AIds[0] {
-			a.VUsed = true
-		}
-	}
+
+	// 全局voucher
 	for _, v := range vs {
 		if v.Id == roads[0].VIds[0] {
-			v.UsedBy = roads[0].AIds[0]
+			v.UsedBy = act.Id
 		}
 	}
 
