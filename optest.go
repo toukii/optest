@@ -56,6 +56,7 @@ var (
 	vs     []*V
 	As     []*A
 	length int
+	_      = fmt.Sprint()
 )
 
 func Init() {
@@ -80,21 +81,21 @@ func min(i, j int) int {
 	return j
 }
 
-func Search(act *A, acts []*A, voucherM map[int64]*V) ([]string, []int64, int) {
+func Search(act *A, acts []*A, voucherM map[int64]*V) *Road {
 	length++
 	if length > 100 {
 		panic(length)
 	}
 	if act.VUsed {
-		return nil, nil, 0
+		return nil
 	}
 	leftfee := act.LeftFee()
 	if leftfee <= 0 {
-		return nil, nil, 0
+		return nil
 	}
 	leftVouchers := act.NotUsedVouchers()
 	if len(leftVouchers) <= 0 {
-		return nil, nil, 0
+		return nil
 	}
 
 	act.VUsed = true
@@ -124,10 +125,12 @@ func Search(act *A, acts []*A, voucherM map[int64]*V) ([]string, []int64, int) {
 		roads = append(roads, road)
 		if len(acts) > 1 {
 			for _, _a := range leftActs {
-				aids, vids, reduce := Search(_a, leftActs, voucherM)
-				road.AIds = append(road.AIds, aids...)
-				road.VIds = append(road.VIds, vids...)
-				road.Reduce += reduce
+				subroad := Search(_a, leftActs, voucherM)
+				if subroad != nil {
+					road.AIds = append(road.AIds, subroad.AIds...)
+					road.VIds = append(road.VIds, subroad.VIds...)
+					road.Reduce += subroad.Reduce
+				}
 			}
 		}
 
@@ -145,26 +148,40 @@ func Search(act *A, acts []*A, voucherM map[int64]*V) ([]string, []int64, int) {
 	})
 	if roads[0] == nil {
 		act.VUsed = false
-		return nil, nil, 0
+		return nil
 	}
 
 	// 全局voucher
 	voucherM[roads[0].VIds[0]].UsedBy = act.Id
 
-	return roads[0].AIds, roads[0].VIds, roads[0].Reduce
+	return roads[0]
 }
 
-func SearchOpt(acts []*A, vouchers []*V) {
+func SearchOpt(acts []*A, vouchers []*V) *Road {
 	vm := make(map[int64]*V, len(vouchers))
 	for _, v := range vouchers {
 		vm[v.Id] = v
 	}
 
+	roads := make([]*Road, 0, len(acts))
 	for _, act := range acts {
 		Clear(acts, vouchers)
-		aids, vids, r := Search(act, acts, vm)
-		fmt.Printf("aids:%+v, vids:%+v, reduce:%d, length:%d\n", aids, vids, r, length)
+		road := Search(act, acts, vm)
+		if road == nil {
+			continue
+		}
+		roads = append(roads, road)
+		// aids, vids, r := road.AIds, road.VIds, road.Reduce
+		// fmt.Printf("aids:%+v, vids:%+v, reduce:%d, length:%d\n", aids, vids, r, length)
 	}
+	if len(roads) <= 0 {
+		return nil
+	}
+	sort.Slice(roads, func(i, j int) bool {
+		return roads[i].Reduce > roads[j].Reduce
+	})
+
+	return roads[0]
 }
 
 func Clear(acts []*A, vouchers []*V) {

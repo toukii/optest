@@ -6,29 +6,46 @@ import (
 	"git.ezbuy.me/ezbuy/base/misc/log"
 )
 
-func TestOpt(t *testing.T) {
-	Init()
-	vm := make(map[int64]*V, len(vs))
-	for _, v := range vs {
-		vm[v.Id] = v
-	}
+// func TestOpt(t *testing.T) {
+// 	Init()
+// 	vm := make(map[int64]*V, len(vs))
+// 	for _, v := range vs {
+// 		vm[v.Id] = v
+// 	}
 
-	aids, vids, r := Search(As[0], As, vm)
-	t.Logf("aids:%+v, vids:%+v, reduce:%d, length:%d", aids, vids, r, length)
-	log.JSON(As)
+// 	road := Search(As[0], As, vm)
+// 	aids, vids, r := road.AIds, road.VIds, road.Reduce
+// 	t.Logf("aids:%+v, vids:%+v, reduce:%d, length:%d", aids, vids, r, length)
+// 	log.JSON(As)
 
-	Init()
-	aids, vids, r = Search(As[1], As, vm)
-	t.Logf("aids:%+v, vids:%+v, reduce:%d, length:%d", aids, vids, r, length)
-	log.JSON(As)
+// 	Init()
+// 	road = Search(As[1], As, vm)
+// 	aids, vids, r = road.AIds, road.VIds, road.Reduce
+// 	t.Logf("aids:%+v, vids:%+v, reduce:%d, length:%d", aids, vids, r, length)
+// 	log.JSON(As)
 
-	Init()
-	aids, vids, r = Search(As[2], As, vm)
-	t.Logf("aids:%+v, vids:%+v, reduce:%d, length:%d", aids, vids, r, length)
-	log.JSON(As)
-}
+// 	Init()
+// 	road = Search(As[2], As, vm)
+// 	aids, vids, r = road.AIds, road.VIds, road.Reduce
+// 	t.Logf("aids:%+v, vids:%+v, reduce:%d, length:%d", aids, vids, r, length)
+// 	log.JSON(As)
+// }
 
 func TestA(*testing.T) {
 	Init()
-	SearchOpt(As, vs)
+	road := SearchOpt(As, vs)
+	log.JSON(road)
+
+	// road1 := SearchOpt(As, vs)
+	// log.JSON(road1)
+}
+
+func BenchmarkOptest(b *testing.B) {
+	Init()
+	for i := 0; i < b.N; i++ {
+		road := SearchOpt(As, vs)
+		if road.Reduce != 600 {
+			b.Errorf("road:%+v", road)
+		}
+	}
 }
