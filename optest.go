@@ -1,6 +1,7 @@
 package optest
 
 import (
+	"fmt"
 	"sort"
 )
 
@@ -29,6 +30,20 @@ func (a *A) LeftFee() int {
 		return fee
 	}
 	return fee
+}
+
+func (a *A) NotUsedVouchers() []*V {
+	if len(a.Vs) <= 0 {
+		return nil
+	}
+	vs := make([]*V, 0, len(a.Vs))
+	for _, v := range a.Vs {
+		if v.UsedBy != "" {
+			continue
+		}
+		vs = append(vs, v)
+	}
+	return vs
 }
 
 type Road struct {
@@ -65,7 +80,7 @@ func min(i, j int) int {
 	return j
 }
 
-func Search(act *A, acts []*A) ([]string, []int64, int) {
+func Search(act *A, acts []*A, voucherM map[int64]*V) ([]string, []int64, int) {
 	length++
 	if length > 100 {
 		panic(length)
@@ -77,7 +92,8 @@ func Search(act *A, acts []*A) ([]string, []int64, int) {
 	if leftfee <= 0 {
 		return nil, nil, 0
 	}
-	if len(act.Vs) <= 0 {
+	leftVouchers := act.NotUsedVouchers()
+	if len(leftVouchers) <= 0 {
 		return nil, nil, 0
 	}
 
@@ -92,7 +108,7 @@ func Search(act *A, acts []*A) ([]string, []int64, int) {
 	}
 	// len 可以斟酌
 	roads := make([]*Road, 0, len(act.Vs))
-	for _, v := range act.Vs {
+	for _, v := range leftVouchers {
 		if v.UsedBy != "" {
 			continue
 		}
@@ -108,7 +124,7 @@ func Search(act *A, acts []*A) ([]string, []int64, int) {
 		roads = append(roads, road)
 		if len(acts) > 1 {
 			for _, _a := range leftActs {
-				aids, vids, reduce := Search(_a, leftActs)
+				aids, vids, reduce := Search(_a, leftActs, voucherM)
 				road.AIds = append(road.AIds, aids...)
 				road.VIds = append(road.VIds, vids...)
 				road.Reduce += reduce
@@ -133,11 +149,30 @@ func Search(act *A, acts []*A) ([]string, []int64, int) {
 	}
 
 	// 全局voucher
-	for _, v := range vs {
-		if v.Id == roads[0].VIds[0] {
-			v.UsedBy = act.Id
-		}
-	}
+	voucherM[roads[0].VIds[0]].UsedBy = act.Id
 
 	return roads[0].AIds, roads[0].VIds, roads[0].Reduce
+}
+
+func SearchOpt(acts []*A, vouchers []*V) {
+	vm := make(map[int64]*V, len(vouchers))
+	for _, v := range vouchers {
+		vm[v.Id] = v
+	}
+
+	for _, act := range acts {
+		Clear(acts, vouchers)
+		aids, vids, r := Search(act, acts, vm)
+		fmt.Printf("aids:%+v, vids:%+v, reduce:%d, length:%d\n", aids, vids, r, length)
+	}
+}
+
+func Clear(acts []*A, vouchers []*V) {
+	length = 0
+	for _, act := range acts {
+		act.VUsed = false
+	}
+	for _, v := range vouchers {
+		v.UsedBy = ""
+	}
 }
