@@ -100,15 +100,18 @@ func Search(act *A, acts []*A, voucherM map[int64]*V) *Road {
 
 	act.VUsed = true
 
-	leftActs := make([]*A, 0, len(acts)+1)
-	for _, _a := range acts {
-		if _a.VUsed {
-			continue
+	size := len(acts) - 1
+	var leftActs []*A
+	if size > 0 {
+		leftActs = make([]*A, 0, size)
+		for _, _a := range acts {
+			if _a.VUsed {
+				continue
+			}
+			leftActs = append(leftActs, _a)
 		}
-		leftActs = append(leftActs, _a)
 	}
-	// len 可以斟酌
-	roads := make([]*Road, 0, len(act.Vs))
+	roads := make([]*Road, 0, len(leftVouchers))
 	for _, v := range leftVouchers {
 		if v.UsedBy != "" {
 			continue
