@@ -53,22 +53,22 @@ type Road struct {
 }
 
 var (
-	vs     []*V
-	As     []*A
-	length int
-	_      = fmt.Sprint()
+	Vouchers []*V
+	Acts     []*A
+	length   int
+	_        = fmt.Sprint()
 )
 
 func Init() {
-	vs = []*V{
+	Vouchers = []*V{
 		&V{1, 100, ""},
 		&V{2, 200, ""},
 		&V{3, 300, ""},
 	}
-	As = []*A{
-		&A{Id: "A1", Vs: []*V{vs[0], vs[1], vs[2]}, Fee: 800},
-		&A{Id: "A2", Vs: []*V{vs[1], vs[2]}, Fee: 800},
-		&A{Id: "A3", Vs: []*V{vs[1], vs[2]}, Fee: 200},
+	Acts = []*A{
+		&A{Id: "A1", Vs: []*V{Vouchers[0], Vouchers[1], Vouchers[2]}, Fee: 800},
+		&A{Id: "A2", Vs: []*V{Vouchers[1], Vouchers[2]}, Fee: 800},
+		&A{Id: "A3", Vs: []*V{Vouchers[1], Vouchers[2]}, Fee: 200},
 	}
 
 	length = 0
