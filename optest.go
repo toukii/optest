@@ -52,27 +52,18 @@ type Road struct {
 	Reduce int
 }
 
-var (
-	Vouchers []*V
-	Acts     []*A
-	length   int
-	_        = fmt.Sprint()
-)
-
-func Init() {
-	Vouchers = []*V{
-		&V{1, 100, ""},
-		&V{2, 200, ""},
-		&V{3, 300, ""},
+func (r *Road) MapAV() map[string]int64 {
+	m := make(map[string]int64, len(r.AIds)+1)
+	for i, actId := range r.AIds {
+		m[actId] = r.VIds[i]
 	}
-	Acts = []*A{
-		&A{Id: "A1", Vs: []*V{Vouchers[0], Vouchers[1], Vouchers[2]}, Fee: 800},
-		&A{Id: "A2", Vs: []*V{Vouchers[1], Vouchers[2]}, Fee: 800},
-		&A{Id: "A3", Vs: []*V{Vouchers[1], Vouchers[2]}, Fee: 200},
-	}
-
-	length = 0
+	return m
 }
+
+var (
+	length int
+	_      = fmt.Sprint()
+)
 
 func min(i, j int) int {
 	if i <= j {
